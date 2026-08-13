@@ -4,8 +4,15 @@ import * as cheerio from 'cheerio'
 
 const app = express()
 const port = 3001
-
 const weekdays = ['MÅNDAG', 'TISDAG', 'ONSDAG', 'TORSDAG', 'FREDAG']
+const lunchSchedule = {
+    måndag: '/api/hos-andreas?day=MÅNDAG',
+    tisdag: '/api/w?day=TISDAG',
+    onsdag: '/api/lime',
+    torsdag: '/api/campus?day=TORSDAG',
+    fredag: '/api/campus?day=FREDAG',
+}
+
 
 app.use(cors())
 
@@ -251,6 +258,26 @@ app.get('/api/w', async (request, response) => {
             message: 'Kunde inte hämta menyn från W Welcome.',
         })
     }
+})
+
+app.get('/api/today', (request, response) => {
+    const today = new Intl.DateTimeFormat('sv-SE', {
+        weekday: 'long',
+        timeZone: 'Europe/Stockholm',
+    })
+        .format(new Date())
+        .toLowerCase()
+
+    const menuEndpoint = lunchSchedule[today]
+
+    if (!menuEndpoint) {
+        return response.status(404).json({
+            day: today,
+            message: 'Ingen lunch är planerad idag.',
+        })
+    }
+
+    response.redirect(307, menuEndpoint)
 })
 
 app.listen(port, () => {
