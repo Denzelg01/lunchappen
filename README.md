@@ -1,16 +1,50 @@
-# React + Vite
+# Lunch Jämtland Basket
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+En webbapp som visar dagens lunchmeny för den restaurang där Jämtland Basket äter den aktuella vardagen.
 
-Currently, two official plugins are available:
+## Syfte
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Appen ska göra det möjligt att snabbt se dagens restaurang och lunchrätter utan att behöva besöka restaurangernas olika webbplatser.
 
-## React Compiler
+Målet är att appen senare automatiskt ska hämta menyerna och skicka en notis varje vardagsmorgon.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Veckoschema
 
-## Expanding the ESLint configuration
+| Dag     | Restaurang                 |
+| ------- | -------------------------- |
+| Måndag  | Hos Andreas Östersund City |
+| Tisdag  | W Welcome                  |
+| Onsdag  | LIME Odenskog              |
+| Torsdag | Campusrestaurangen         |
+| Fredag  | Campusrestaurangen         |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Funktioner just nu
+
+- Visar dagens restaurang utifrån veckodagen
+- Visar lunchrätter direkt på startsidan
+- Visar hela veckans restaurangschema
+- Länkar till restaurangernas originalmenyer
+- Anpassad layout för dator och mobil
+
+Menyerna är för närvarande testdata.
+
+## Planerade funktioner
+
+- Automatisk hämtning av aktuella lunchmenyer
+- Hantering av olika menyformat
+- PWA-stöd och installation på mobilens hemskärm
+- Pushnotis varje vardagsmorgon
+- Valbar tid för notiser
+- Vy för hela veckans menyer
+
+## Teknik
+
+- React
+- Vite
+- JavaScript
+- CSS
+- Git och GitHub
+
+## Projektstatus
+
+Projektet är under aktiv utveckling. Den första versionen av gränssnittet och veckoschemat är klar.
