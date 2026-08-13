@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
 const schedule = [
   {
     day: 'Måndag',
@@ -43,8 +45,9 @@ function App() {
   useEffect(() => {
     async function fetchTodaysLunch() {
       try {
-        const response = await fetch('http://localhost:3001/api/today')
+        const response = await fetch(`${apiUrl}/api/today`)
         const data = await response.json()
+
 
         if (!response.ok) {
           throw new Error(data.message || 'Dagens meny kunde inte hämtas.')
