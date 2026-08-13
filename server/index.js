@@ -4,6 +4,31 @@ import * as cheerio from 'cheerio'
 
 const app = express()
 const port = 3001
+const weekdays = ['MÅNDAG', 'TISDAG', 'ONSDAG', 'TORSDAG', 'FREDAG']
+
+function extractMenuForDay(textBlocks, selectedDay) {
+    const startIndex = textBlocks.findIndex(
+        (text) => text.toUpperCase() === selectedDay,
+    )
+
+    if (startIndex === -1) {
+        return []
+    }
+
+    const dishes = []
+
+    for (let index = startIndex + 1; index < textBlocks.length; index++) {
+        const text = textBlocks[index]
+
+        if (weekdays.includes(text.toUpperCase())) {
+            break
+        }
+
+        dishes.push(text)
+    }
+
+    return dishes
+}
 
 app.use(cors())
 
@@ -75,6 +100,52 @@ app.get('/api/hos-andreas', async (request, response) => {
 
         response.status(500).json({
             message: 'Kunde inte hämta menyn från Hos Andreas.',
+        })
+    }
+})
+
+app.get('/api/campus', async (request, response) => {
+    try {
+        const websiteResponse = await fetch(
+            'https://www.campusrestaurangen.com/dagens-lunch',
+        )
+
+        const html = await websiteResponse.text()
+        const $ = cheerio.load(html)
+
+        const headings = $('h1, h2, h3, h4, h5, h6')
+            .map((index, element) => ({
+                tag: element.tagName,
+                text: $(element).text().replace(/\s+/g, ' ').trim(),
+            }))
+            .get()
+        const textBlocks = $('p')
+            .map((index, element) =>
+                $(element).text().replace(/\s+/g, ' ').trim(),
+            )
+            .get()
+            .filter(Boolean)
+        const requestedDay = (request.query.day || 'TORSDAG').toUpperCase()
+
+        if (!weekdays.includes(requestedDay)) {
+            return response.status(400).json({
+                message: 'Ogiltig veckodag. Välj måndag till fredag.',
+            })
+        }
+
+        const menu = extractMenuForDay(textBlocks, requestedDay)
+
+        response.json({
+            restaurant: 'Campusrestaurangen',
+            day: requestedDay,
+            fetchedSuccessfully: websiteResponse.ok,
+            menu,
+        })
+    } catch (error) {
+        console.error(error)
+
+        response.status(500).json({
+            message: 'Kunde inte hämta menyn från Campusrestaurangen.',
         })
     }
 })
