@@ -20,13 +20,14 @@ Målet är att appen senare automatiskt ska hämta menyerna och skicka en notis 
 
 ## Funktioner just nu
 
-- Visar dagens restaurang utifrån veckodagen
-- Visar lunchrätter direkt på startsidan
+- Väljer dagens restaurang automatiskt utifrån veckodagen
+- Hämtar aktuella lunchmenyer från restaurangernas webbplatser
+- Visar dagens rätter direkt på startsidan
 - Visar hela veckans restaurangschema
 - Länkar till restaurangernas originalmenyer
+- Hanterar olika menyformat för de fyra restaurangerna
+- Visar ett begripligt felmeddelande om en meny inte kan tolkas
 - Anpassad layout för dator och mobil
-
-Menyerna är för närvarande testdata.
 
 ## Planerade funktioner
 
@@ -47,4 +48,4 @@ Menyerna är för närvarande testdata.
 
 ## Projektstatus
 
-Projektet är under aktiv utveckling. Den första versionen av gränssnittet och veckoschemat är klar.
+Projektet är under aktiv utveckling. Frontend och backend är sammankopplade och appen kan hämta och visa aktuella lunchmenyer. Nästa större steg är PWA-stöd, publicering och pushnotiser.
