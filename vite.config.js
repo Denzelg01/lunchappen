@@ -12,7 +12,7 @@ export default defineConfig({
         short_name: 'Lunch JB',
         description:
           'Visar dagens lunchmeny för Jämtland Baskets restaurangschema.',
-        theme_color: '#0f86e7',
+        theme_color: '#ee8736',
         background_color: '#f3f6f1',
         display: 'standalone',
         start_url: '/',
