@@ -33,6 +33,30 @@ function extractMenuForDay(textBlocks, selectedDay) {
     return dishes
 }
 
+function extractMenuBetween(textBlocks, startMarker, endMarker) {
+    const startIndex = textBlocks.findIndex(
+        (text) => text.toLowerCase() === startMarker.toLowerCase(),
+    )
+
+    if (startIndex === -1) {
+        return []
+    }
+
+    const menu = []
+
+    for (let index = startIndex + 1; index < textBlocks.length; index++) {
+        const text = textBlocks[index]
+
+        if (text.toLowerCase() === endMarker.toLowerCase()) {
+            break
+        }
+
+        menu.push(text)
+    }
+
+    return menu
+}
+
 app.get('/api/health', (request, response) => {
     response.json({
         message: 'Lunchservern fungerar!',
@@ -144,6 +168,38 @@ app.get('/api/campus', async (request, response) => {
 
         response.status(500).json({
             message: 'Kunde inte hämta menyn från Campusrestaurangen.',
+        })
+    }
+})
+
+app.get('/api/lime', async (request, response) => {
+    try {
+        const websiteResponse = await fetch(
+            'https://limeostersund.se/odenskog/',
+        )
+
+        const html = await websiteResponse.text()
+        const $ = cheerio.load(html)
+
+        const textBlocks = $('h1, h2, h3, h4, h5, h6, p')
+            .map((index, element) =>
+                $(element).text().replace(/\s+/g, ' ').trim(),
+            )
+            .get()
+            .filter(Boolean)
+        const menu = extractMenuBetween(textBlocks, 'Lill-Lördag', 'Torsdag')
+
+        response.json({
+            restaurant: 'LIME Odenskog',
+            day: 'ONSDAG',
+            fetchedSuccessfully: websiteResponse.ok,
+            menu,
+        })
+    } catch (error) {
+        console.error(error)
+
+        response.status(500).json({
+            message: 'Kunde inte hämta menyn från LIME Odenskog.',
         })
     }
 })
