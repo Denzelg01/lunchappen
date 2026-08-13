@@ -1,7 +1,11 @@
+import path from 'path'
+import { fileURLToPath } from 'url'
 import express from 'express'
 import cors from 'cors'
 import * as cheerio from 'cheerio'
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 const app = express()
 const port = process.env.PORT || 3001
 const weekdays = ['MÅNDAG', 'TISDAG', 'ONSDAG', 'TORSDAG', 'FREDAG']
@@ -286,6 +290,14 @@ app.get('/api/today', (request, response) => {
     }
 
     response.redirect(307, menuEndpoint)
+})
+
+const distPath = path.join(__dirname, '..', 'dist')
+
+app.use(express.static(distPath))
+
+app.get('/{*splat}', (request, response) => {
+    response.sendFile(path.join(distPath, 'index.html'))
 })
 
 app.listen(port, () => {
