@@ -3,7 +3,7 @@ import cors from 'cors'
 import * as cheerio from 'cheerio'
 
 const app = express()
-const port = 3001
+const port = process.env.PORT || 3001
 const weekdays = ['MÅNDAG', 'TISDAG', 'ONSDAG', 'TORSDAG', 'FREDAG']
 const lunchSchedule = {
     måndag: '/api/hos-andreas?day=MÅNDAG',
@@ -14,7 +14,15 @@ const lunchSchedule = {
 }
 
 
-app.use(cors())
+const allowedOrigins = process.env.CLIENT_URL
+    ? [process.env.CLIENT_URL]
+    : ['http://localhost:5173', 'http://localhost:4173']
+
+app.use(
+    cors({
+        origin: allowedOrigins,
+    }),
+)
 
 function extractMenuForDay(textBlocks, selectedDay) {
     const startIndex = textBlocks.findIndex(
