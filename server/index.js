@@ -204,6 +204,55 @@ app.get('/api/lime', async (request, response) => {
     }
 })
 
+app.get('/api/w', async (request, response) => {
+    try {
+        const websiteResponse = await fetch(
+            'https://www.w-welcome.se/dagens-lunch',
+        )
+
+        const html = await websiteResponse.text()
+        const $ = cheerio.load(html)
+
+        const textBlocks = $('h1, h2, h3, h4, h5, h6, p')
+            .map((index, element) =>
+                $(element).text().replace(/\s+/g, ' ').trim(),
+            )
+            .get()
+            .filter(Boolean)
+        const requestedDay = (request.query.day || 'TISDAG').toUpperCase()
+
+        if (!weekdays.includes(requestedDay)) {
+            return response.status(400).json({
+                message: 'Ogiltig veckodag. Välj måndag till fredag.',
+            })
+        }
+
+        const menu = extractMenuForDay(textBlocks, requestedDay)
+
+        if (menu.length === 0) {
+            return response.status(422).json({
+                restaurant: 'W Welcome',
+                day: requestedDay,
+                message: 'Menyn kunde hämtas, men dagens rätter kunde inte identifieras.',
+                menuUrl: 'https://www.w-welcome.se/dagens-lunch',
+            })
+        }
+
+        response.json({
+            restaurant: 'W Welcome',
+            day: requestedDay,
+            fetchedSuccessfully: websiteResponse.ok,
+            menu,
+        })
+    } catch (error) {
+        console.error(error)
+
+        response.status(500).json({
+            message: 'Kunde inte hämta menyn från W Welcome.',
+        })
+    }
+})
+
 app.listen(port, () => {
     console.log(`Servern körs på http://localhost:${port}`)
 })
