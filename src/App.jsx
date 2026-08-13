@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import './App.css'
 
 const schedule = [
@@ -5,60 +6,60 @@ const schedule = [
     day: 'Måndag',
     restaurant: 'Hos Andreas Östersund City',
     menuUrl: 'https://www.hosandreas.se/lunchmeny-city/',
-    dishes: [
-      'Exempelrätt 1',
-      'Exempelrätt 2',
-      'Vegetariskt alternativ',
-    ],
   },
   {
     day: 'Tisdag',
     restaurant: 'W Welcome',
     menuUrl: 'https://www.w-welcome.se/dagens-lunch',
-    dishes: [
-      'Exempelrätt 1',
-      'Exempelrätt 2',
-      'Vegetariskt alternativ',
-    ],
   },
   {
     day: 'Onsdag',
     restaurant: 'LIME Odenskog',
     menuUrl: 'https://limeostersund.se/odenskog/',
-    dishes: [
-      'Exempelrätt 1',
-      'Exempelrätt 2',
-      'Vegetariskt alternativ',
-    ],
   },
   {
     day: 'Torsdag',
     restaurant: 'Campusrestaurangen',
     menuUrl: 'https://www.campusrestaurangen.com/dagens-lunch',
-    dishes: [
-      'Exempelrätt 1',
-      'Exempelrätt 2',
-      'Vegetariskt alternativ',
-    ],
   },
   {
     day: 'Fredag',
     restaurant: 'Campusrestaurangen',
     menuUrl: 'https://www.campusrestaurangen.com/dagens-lunch',
-    dishes: [
-      'Exempelrätt 1',
-      'Exempelrätt 2',
-      'Vegetariskt alternativ',
-    ],
   },
 ]
 
 function App() {
+  const [lunchData, setLunchData] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState('')
+
   const todayIndex = new Date().getDay() - 1
   const todaysLunch =
     todayIndex >= 0 && todayIndex < schedule.length
       ? schedule[todayIndex]
       : null
+
+  useEffect(() => {
+    async function fetchTodaysLunch() {
+      try {
+        const response = await fetch('http://localhost:3001/api/today')
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Dagens meny kunde inte hämtas.')
+        }
+
+        setLunchData(data)
+      } catch (error) {
+        setErrorMessage(error.message)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchTodaysLunch()
+  }, [])
 
   return (
     <main className="app">
@@ -75,20 +76,30 @@ function App() {
 
         {todaysLunch ? (
           <>
-            <h2>{todaysLunch.restaurant}</h2>
+            <h2>{lunchData?.restaurant || todaysLunch.restaurant}</h2>
             <p>{todaysLunch.day}</p>
-            <ul className="dish-list">
-   {todaysLunch.dishes.map((dish) => (
-    <li key={dish}>{dish}</li>
-  ))}
-</ul>
+
+            {isLoading && <p>Hämtar dagens meny...</p>}
+
+            {errorMessage && (
+              <p>Menyn kunde inte hämtas: {errorMessage}</p>
+            )}
+
+            {lunchData?.menu && (
+              <ul className="dish-list">
+                {lunchData.menu.map((dish) => (
+                  <li key={dish}>{dish}</li>
+                ))}
+              </ul>
+            )}
+
             <a
               className="menu-button"
               href={todaysLunch.menuUrl}
               target="_blank"
               rel="noreferrer"
             >
-              Visa dagens meny
+              Öppna restaurangens meny
             </a>
           </>
         ) : (
