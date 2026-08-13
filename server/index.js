@@ -4,7 +4,10 @@ import * as cheerio from 'cheerio'
 
 const app = express()
 const port = 3001
+
 const weekdays = ['MÅNDAG', 'TISDAG', 'ONSDAG', 'TORSDAG', 'FREDAG']
+
+app.use(cors())
 
 function extractMenuForDay(textBlocks, selectedDay) {
     const startIndex = textBlocks.findIndex(
@@ -30,8 +33,6 @@ function extractMenuForDay(textBlocks, selectedDay) {
     return dishes
 }
 
-app.use(cors())
-
 app.get('/api/health', (request, response) => {
     response.json({
         message: 'Lunchservern fungerar!',
@@ -47,25 +48,32 @@ app.get('/api/hos-andreas', async (request, response) => {
         const html = await websiteResponse.text()
         const $ = cheerio.load(html)
         const pageTitle = $('title').text().trim()
-        const headings = $('h2')
-            .map((index, element) => $(element).text().trim())
-            .get()
-        const mondayHeading = $('h2')
-            .filter((index, element) =>
-                $(element).text().trim().toLowerCase().startsWith('måndag'),
-            )
-            .first()
+        const requestedDay = (request.query.day || 'MÅNDAG').toUpperCase()
+
+        if (!weekdays.includes(requestedDay)) {
+            return response.status(400).json({
+                message: 'Ogiltig veckodag. Välj måndag till fredag.',
+            })
+        }
 
         const menuElements = $('h2, h3, h4, p').toArray()
 
-        const mondayStartIndex = menuElements.findIndex((element) =>
-            $(element).text().trim().toLowerCase().startsWith('måndag'),
+        const startIndex = menuElements.findIndex((element) =>
+            $(element)
+                .text()
+                .trim()
+                .toLowerCase()
+                .startsWith(requestedDay.toLowerCase()),
         )
 
-        const mondayMenu = []
+        const menu = []
 
-        if (mondayStartIndex !== -1) {
-            for (let index = mondayStartIndex + 1; index < menuElements.length; index++) {
+        if (startIndex !== -1) {
+            for (
+                let index = startIndex + 1;
+                index < menuElements.length;
+                index++
+            ) {
                 const element = menuElements[index]
 
                 if ($(element).is('h2')) {
@@ -78,22 +86,17 @@ app.get('/api/hos-andreas', async (request, response) => {
                 const text = elementCopy.text().replace(/\s+/g, ' ').trim()
 
                 if (text) {
-                    mondayMenu.push(text)
+                    menu.push(text)
                 }
             }
         }
-        const mondayParent = {
-            tag: mondayHeading.parent().prop('tagName'),
-            className: mondayHeading.parent().attr('class') || '',
-            text: mondayHeading.parent().text().trim(),
-        }
+
         response.json({
             restaurant: 'Hos Andreas Östersund City',
+            day: requestedDay,
             pageTitle,
             fetchedSuccessfully: websiteResponse.ok,
-            headings,
-            mondayMenu,
-            mondayParent,
+            menu,
         })
     } catch (error) {
         console.error(error)
@@ -113,18 +116,13 @@ app.get('/api/campus', async (request, response) => {
         const html = await websiteResponse.text()
         const $ = cheerio.load(html)
 
-        const headings = $('h1, h2, h3, h4, h5, h6')
-            .map((index, element) => ({
-                tag: element.tagName,
-                text: $(element).text().replace(/\s+/g, ' ').trim(),
-            }))
-            .get()
         const textBlocks = $('p')
             .map((index, element) =>
                 $(element).text().replace(/\s+/g, ' ').trim(),
             )
             .get()
             .filter(Boolean)
+
         const requestedDay = (request.query.day || 'TORSDAG').toUpperCase()
 
         if (!weekdays.includes(requestedDay)) {
@@ -152,4 +150,4 @@ app.get('/api/campus', async (request, response) => {
 
 app.listen(port, () => {
     console.log(`Servern körs på http://localhost:${port}`)
-}) 
+})
