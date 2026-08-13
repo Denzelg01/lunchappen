@@ -41,12 +41,21 @@ function extractMenuForDay(textBlocks, selectedDay) {
 
     for (let index = startIndex + 1; index < textBlocks.length; index++) {
         const text = textBlocks[index]
+        const cleanText = text.replace(/[\u200B-\u200D\uFEFF]/g, '').trim()
 
-        if (weekdays.includes(text.toUpperCase())) {
+        if (!cleanText) {
+            continue
+        }
+
+        if (cleanText.toLowerCase().startsWith('lunchbuffé:')) {
             break
         }
 
-        dishes.push(text)
+        if (weekdays.includes(cleanText.toUpperCase())) {
+            break
+        }
+
+        dishes.push(cleanText)
     }
 
     return dishes
