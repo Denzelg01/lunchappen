@@ -35,6 +35,12 @@ function App() {
   const [lunchData, setLunchData] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
+  const [showInstallHelp, setShowInstallHelp] = useState(false)
+
+  const isInstalled =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true
+
 
   const todayIndex = new Date().getDay() - 1
   const todaysLunch =
@@ -72,6 +78,22 @@ function App() {
         <p className="intro">
           Rätt restaurang för varje vardag – samlad på ett ställe.
         </p>
+
+        {!isInstalled && (
+          <button
+            className="install-button"
+            type="button"
+            onClick={() => setShowInstallHelp(true)}
+          >
+            <img
+              className="install-logo"
+              src="/pwa-192x192.png"
+              alt=""
+              aria-hidden="true"
+            />
+            Gör till app på hemskärmen
+          </button>
+        )}
       </header>
 
       <section className="today-card">
@@ -135,6 +157,51 @@ function App() {
           ))}
         </div>
       </section>
+
+      {showInstallHelp && (
+        <div
+          className="install-overlay"
+          role="presentation"
+          onClick={() => setShowInstallHelp(false)}
+        >
+          <section
+            className="install-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="install-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="close-button"
+              type="button"
+              aria-label="Stäng"
+              onClick={() => setShowInstallHelp(false)}
+            >
+              ×
+            </button>
+
+            <h2 id="install-title">Lägg till Lunch JB</h2>
+
+            <ol>
+              <li>Öppna sidan i Safari.</li>
+              <li>
+                Tryck på Dela-knappen
+                <svg
+                  className="share-icon"
+                  viewBox="0 0 24 24"
+                  aria-label="Dela"
+                >
+                  <path d="M12 15V3" />
+                  <path d="m7.5 7.5 4.5-4.5 4.5 4.5" />
+                  <path d="M7 10H5.5A2.5 2.5 0 0 0 3 12.5v6A2.5 2.5 0 0 0 5.5 21h13a2.5 2.5 0 0 0 2.5-2.5v-6a2.5 2.5 0 0 0-2.5-2.5H17" />
+                </svg>
+              </li>
+              <li>Välj Lägg till på hemskärmen.</li>
+              <li>Tryck på Lägg till.</li>
+            </ol>
+          </section>
+        </div>
+      )}
     </main>
   )
 }
