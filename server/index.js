@@ -477,6 +477,96 @@ app.post('/api/notifications/test', async (request, response) => {
     })
 })
 
+app.post('/api/notifications/daily', async (request, response) => {
+    const authorization = request.headers.authorization
+
+    if (authorization !== `Bearer ${notificationSecret}`) {
+        return response.status(401).json({
+            message: 'Du har inte behörighet att skicka notiser.',
+        })
+    }
+
+    try {
+        const serverUrl = `${request.protocol}://${request.get('host')}`
+        const menuResponse = await fetch(`${serverUrl}/api/today`)
+
+        if (!menuResponse.ok) {
+            return response.status(menuResponse.status).json({
+                message: 'Dagens meny kunde inte hämtas.',
+            })
+        }
+
+        const lunch = await menuResponse.json()
+        const dishes = lunch.menu || []
+
+        const notificationBody =
+            dishes.length > 0
+                ? `${lunch.restaurant}: ${dishes.slice(0, 2).join(' • ')}`
+                : `${lunch.restaurant}: Menyn finns nu i appen.`
+
+        const { data: subscriptions, error } = await supabase
+            .from('push_subscriptions')
+            .select('id, subscription')
+            .eq('enabled', true)
+
+        if (error) {
+            console.error(error)
+
+            return response.status(500).json({
+                message: 'Prenumerationerna kunde inte hämtas.',
+            })
+        }
+
+        const payload = JSON.stringify({
+            title: 'Dagens lunch 🍽️',
+            body: notificationBody,
+            url: '/',
+        })
+
+        let sent = 0
+        let failed = 0
+
+        for (const savedSubscription of subscriptions) {
+            try {
+                await webpush.sendNotification(
+                    savedSubscription.subscription,
+                    payload,
+                )
+                sent++
+            } catch (pushError) {
+                console.error(pushError)
+                failed++
+
+                if (
+                    pushError.statusCode === 404 ||
+                    pushError.statusCode === 410
+                ) {
+                    await supabase
+                        .from('push_subscriptions')
+                        .update({
+                            enabled: false,
+                            updated_at: new Date().toISOString(),
+                        })
+                        .eq('id', savedSubscription.id)
+                }
+            }
+        }
+
+        response.json({
+            message: 'Dagens lunchutskick är klart.',
+            restaurant: lunch.restaurant,
+            sent,
+            failed,
+        })
+    } catch (error) {
+        console.error(error)
+
+        response.status(500).json({
+            message: 'Dagens lunchutskick misslyckades.',
+        })
+    }
+})
+
 const distPath = path.join(__dirname, '..', 'dist')
 
 app.use(express.static(distPath))
