@@ -7,6 +7,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        navigateFallbackDenylist: [/^\/api\//],
+      },
       manifest: {
         name: 'Lunch Jämtland Basket',
         short_name: 'Lunch JB',
