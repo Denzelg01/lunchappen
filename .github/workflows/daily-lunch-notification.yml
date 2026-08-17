@@ -1,0 +1,28 @@
+name: Send daily lunch notification
+
+on:
+  schedule:
+    - cron: "47 8 * * 1-5"
+      timezone: "Europe/Stockholm"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  send-notification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Wake server and send lunch notification
+        env:
+          NOTIFICATION_SECRET: ${{ secrets.NOTIFICATION_SECRET }}
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --max-time 240 \
+            --retry 2 \
+            --retry-delay 20 \
+            --request POST \
+            --header "Authorization: Bearer $NOTIFICATION_SECRET" \
+            https://lunch-jb.onrender.com/api/notifications/daily
