@@ -31,6 +31,11 @@ const supabase = createClient(supabaseUrl, supabaseSecretKey, {
     },
 })
 
+const notificationSecret = process.env.NOTIFICATION_SECRET
+
+if (!notificationSecret) {
+    throw new Error('Utskickshemligheten saknas.')
+}
 
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
@@ -404,6 +409,71 @@ app.post('/api/push-subscriptions', async (request, response) => {
 
     response.status(201).json({
         message: 'Lunchnotiser är aktiverade!',
+    })
+})
+
+app.post('/api/notifications/test', async (request, response) => {
+    const authorization = request.headers.authorization
+
+    if (authorization !== `Bearer ${notificationSecret}`) {
+        return response.status(401).json({
+            message: 'Du har inte behörighet att skicka notiser.',
+        })
+    }
+
+    const { data: subscriptions, error } = await supabase
+        .from('push_subscriptions')
+        .select('id, subscription')
+        .eq('enabled', true)
+
+    if (error) {
+        console.error(error)
+
+        return response.status(500).json({
+            message: 'Prenumerationerna kunde inte hämtas.',
+        })
+    }
+
+    const payload = JSON.stringify({
+        title: 'Lunch JB',
+        body: 'Testnotisen fungerar! 🍽️',
+        url: '/',
+    })
+
+    let sent = 0
+    let failed = 0
+
+    for (const savedSubscription of subscriptions) {
+        try {
+            await webpush.sendNotification(
+                savedSubscription.subscription,
+                payload,
+            )
+
+            sent++
+        } catch (pushError) {
+            console.error(pushError)
+            failed++
+
+            if (
+                pushError.statusCode === 404 ||
+                pushError.statusCode === 410
+            ) {
+                await supabase
+                    .from('push_subscriptions')
+                    .update({
+                        enabled: false,
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq('id', savedSubscription.id)
+            }
+        }
+    }
+
+    response.json({
+        message: 'Testutskicket är klart.',
+        sent,
+        failed,
     })
 })
 
