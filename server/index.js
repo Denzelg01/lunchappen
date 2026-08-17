@@ -486,11 +486,46 @@ app.post('/api/notifications/daily', async (request, response) => {
         })
     }
 
+    const notificationDate = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Europe/Stockholm',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).format(new Date())
+
+    const { error: runError } = await supabase
+        .from('notification_runs')
+        .insert({
+            notification_date: notificationDate,
+            status: 'sending',
+        })
+
+    if (runError?.code === '23505') {
+        return response.json({
+            message: 'Dagens notis har redan skickats.',
+            date: notificationDate,
+            alreadySent: true,
+        })
+    }
+
+    if (runError) {
+        console.error(runError)
+
+        return response.status(500).json({
+            message: 'Dagens utskick kunde inte registreras.',
+        })
+    }
+
     try {
         const serverUrl = `${request.protocol}://${request.get('host')}`
         const menuResponse = await fetch(`${serverUrl}/api/today`)
 
         if (!menuResponse.ok) {
+            await supabase
+                .from('notification_runs')
+                .delete()
+                .eq('notification_date', notificationDate)
+
             return response.status(menuResponse.status).json({
                 message: 'Dagens meny kunde inte hämtas.',
             })
@@ -511,6 +546,11 @@ app.post('/api/notifications/daily', async (request, response) => {
 
         if (error) {
             console.error(error)
+
+            await supabase
+                .from('notification_runs')
+                .delete()
+                .eq('notification_date', notificationDate)
 
             return response.status(500).json({
                 message: 'Prenumerationerna kunde inte hämtas.',
@@ -552,14 +592,35 @@ app.post('/api/notifications/daily', async (request, response) => {
             }
         }
 
+        const { error: updateError } = await supabase
+            .from('notification_runs')
+            .update({
+                status: 'completed',
+                sent_count: sent,
+                failed_count: failed,
+                completed_at: new Date().toISOString(),
+            })
+            .eq('notification_date', notificationDate)
+
+        if (updateError) {
+            console.error(updateError)
+        }
+
         response.json({
             message: 'Dagens lunchutskick är klart.',
+            date: notificationDate,
             restaurant: lunch.restaurant,
             sent,
             failed,
+            alreadySent: false,
         })
     } catch (error) {
         console.error(error)
+
+        await supabase
+            .from('notification_runs')
+            .delete()
+            .eq('notification_date', notificationDate)
 
         response.status(500).json({
             message: 'Dagens lunchutskick misslyckades.',
