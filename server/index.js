@@ -3,9 +3,31 @@ import { fileURLToPath } from 'url'
 import express from 'express'
 import cors from 'cors'
 import * as cheerio from 'cheerio'
+import dotenv from 'dotenv'
+import { createClient } from '@supabase/supabase-js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+dotenv.config({
+    path: path.join(__dirname, '..', '.env.local'),
+})
+
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY
+
+if (!supabaseUrl || !supabaseSecretKey) {
+    throw new Error('Supabase-inställningarna saknas.')
+}
+
+const supabase = createClient(supabaseUrl, supabaseSecretKey, {
+    auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+    },
+})
+
 const app = express()
 const port = process.env.PORT || 3001
 const weekdays = ['MÅNDAG', 'TISDAG', 'ONSDAG', 'TORSDAG', 'FREDAG']
@@ -301,6 +323,25 @@ app.get('/api/today', (request, response) => {
     response.redirect(307, menuEndpoint)
 })
 
+app.get('/api/database-health', async (request, response) => {
+    const { count, error } = await supabase
+        .from('push_subscriptions')
+        .select('id', { count: 'exact', head: true })
+
+    if (error) {
+        console.error(error)
+
+        return response.status(500).json({
+            message: 'Databasen kunde inte nås.',
+        })
+    }
+
+    response.json({
+        message: 'Databasen fungerar!',
+        subscriptions: count,
+    })
+})
+
 const distPath = path.join(__dirname, '..', 'dist')
 
 app.use(express.static(distPath))
@@ -308,6 +349,8 @@ app.use(express.static(distPath))
 app.get('/{*splat}', (request, response) => {
     response.sendFile(path.join(distPath, 'index.html'))
 })
+
+
 
 app.listen(port, () => {
     console.log(`Servern körs på http://localhost:${port}`)
