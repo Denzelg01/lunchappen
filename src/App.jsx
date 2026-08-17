@@ -31,11 +31,26 @@ const schedule = [
   },
 ]
 
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/')
+
+  const rawData = window.atob(base64)
+
+  return Uint8Array.from(rawData, (character) =>
+    character.charCodeAt(0),
+  )
+}
+
 function App() {
   const [lunchData, setLunchData] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
   const [showInstallHelp, setShowInstallHelp] = useState(false)
+  const [notificationMessage, setNotificationMessage] = useState('')
+  const [isSubscribing, setIsSubscribing] = useState(false)
 
   const isInstalled =
     window.matchMedia('(display-mode: standalone)').matches ||
@@ -70,6 +85,83 @@ function App() {
     fetchTodaysLunch()
   }, [])
 
+  async function enableNotifications() {
+    if (
+      !('serviceWorker' in navigator) ||
+      !('PushManager' in window) ||
+      !('Notification' in window)
+    ) {
+      setNotificationMessage(
+        'Den här webbläsaren stöder inte pushnotiser.',
+      )
+      return
+    }
+
+    if (!isInstalled) {
+      setNotificationMessage(
+        'Lägg först till appen på hemskärmen och öppna den därifrån.',
+      )
+      return
+    }
+
+    try {
+      setIsSubscribing(true)
+      setNotificationMessage('')
+
+      const permission = await window.Notification.requestPermission()
+
+      if (permission !== 'granted') {
+        throw new Error('Du behöver tillåta notiser i telefonens inställningar.')
+      }
+
+      const registration = await navigator.serviceWorker.ready
+
+      const keyResponse = await fetch(`${apiUrl}/api/push-public-key`)
+      const keyData = await keyResponse.json()
+
+      if (!keyResponse.ok || !keyData.publicKey) {
+        throw new Error('Pushnyckeln kunde inte hämtas.')
+      }
+
+      let subscription =
+        await registration.pushManager.getSubscription()
+
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(
+            keyData.publicKey,
+          ),
+        })
+      }
+
+      const saveResponse = await fetch(
+        `${apiUrl}/api/push-subscriptions`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(subscription),
+        },
+      )
+
+      const saveData = await saveResponse.json()
+
+      if (!saveResponse.ok) {
+        throw new Error(
+          saveData.message || 'Prenumerationen kunde inte sparas.',
+        )
+      }
+
+      setNotificationMessage('Lunchnotiser är aktiverade!')
+    } catch (error) {
+      setNotificationMessage(error.message)
+    } finally {
+      setIsSubscribing(false)
+    }
+  }
+
   return (
     <main className="app">
       <header className="hero">
@@ -93,6 +185,27 @@ function App() {
             />
             Gör till app på hemskärmen
           </button>
+        )}
+
+        {isInstalled && (
+          <>
+            <button
+              className="notification-button"
+              type="button"
+              disabled={isSubscribing}
+              onClick={enableNotifications}
+            >
+              {isSubscribing
+                ? 'Aktiverar...'
+                : '🔔 Aktivera lunchnotiser'}
+            </button>
+
+            {notificationMessage && (
+              <p className="notification-message">
+                {notificationMessage}
+              </p>
+            )}
+          </>
         )}
       </header>
 

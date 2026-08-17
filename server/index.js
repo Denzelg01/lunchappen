@@ -5,6 +5,9 @@ import cors from 'cors'
 import * as cheerio from 'cheerio'
 import dotenv from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
+import webpush from 'web-push'
+
+
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -28,6 +31,22 @@ const supabase = createClient(supabaseUrl, supabaseSecretKey, {
     },
 })
 
+
+const vapidPublicKey = process.env.VAPID_PUBLIC_KEY
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
+const vapidSubject = process.env.VAPID_SUBJECT
+
+if (!vapidPublicKey || !vapidPrivateKey || !vapidSubject) {
+    throw new Error('VAPID-inställningarna saknas.')
+}
+
+webpush.setVapidDetails(
+    vapidSubject,
+    vapidPublicKey,
+    vapidPrivateKey,
+)
+
+
 const app = express()
 const port = process.env.PORT || 3001
 const weekdays = ['MÅNDAG', 'TISDAG', 'ONSDAG', 'TORSDAG', 'FREDAG']
@@ -49,6 +68,8 @@ app.use(
         origin: allowedOrigins,
     }),
 )
+
+app.use(express.json({ limit: '10kb' }))
 
 function extractMenuForDay(textBlocks, selectedDay) {
     const startIndex = textBlocks.findIndex(
@@ -339,6 +360,50 @@ app.get('/api/database-health', async (request, response) => {
     response.json({
         message: 'Databasen fungerar!',
         subscriptions: count,
+    })
+})
+
+app.get('/api/push-public-key', (request, response) => {
+    response.json({
+        publicKey: vapidPublicKey,
+    })
+})
+
+app.post('/api/push-subscriptions', async (request, response) => {
+    const subscription = request.body
+    const endpoint = subscription?.endpoint
+    const keys = subscription?.keys
+
+    if (!endpoint || !keys?.p256dh || !keys?.auth) {
+        return response.status(400).json({
+            message: 'Pushprenumerationen är ogiltig.',
+        })
+    }
+
+    const { error } = await supabase
+        .from('push_subscriptions')
+        .upsert(
+            {
+                endpoint,
+                subscription,
+                enabled: true,
+                updated_at: new Date().toISOString(),
+            },
+            {
+                onConflict: 'endpoint',
+            },
+        )
+
+    if (error) {
+        console.error(error)
+
+        return response.status(500).json({
+            message: 'Pushprenumerationen kunde inte sparas.',
+        })
+    }
+
+    response.status(201).json({
+        message: 'Lunchnotiser är aktiverade!',
     })
 })
 

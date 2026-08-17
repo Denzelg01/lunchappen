@@ -9,6 +9,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       workbox: {
         navigateFallbackDenylist: [/^\/api\//],
+        importScripts: ['/push-handler.js'],
       },
       manifest: {
         name: 'Lunch Jämtland Basket',

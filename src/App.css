@@ -363,3 +363,48 @@ a {
   gap: 11px;
   margin-bottom: 14px;
 }
+
+.notification-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  padding: 12px 18px;
+  color: #173921;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  background: #f1c75b;
+  border: 0;
+  border-radius: 999px;
+  box-shadow: 0 7px 20px rgb(23 57 33 / 12%);
+  transition:
+    background 160ms ease,
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.notification-button:hover {
+  background: #ffda73;
+  transform: translateY(-2px);
+}
+
+.notification-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+  transform: none;
+}
+
+.notification-button:focus-visible {
+  outline: 3px solid rgb(238 135 54 / 40%);
+  outline-offset: 3px;
+}
+
+.notification-message {
+  max-width: 480px;
+  margin: 14px auto 0;
+  color: #58705f;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
