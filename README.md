@@ -1,12 +1,26 @@
 # Lunch Jämtland Basket
 
-En webbapp som visar dagens lunchmeny för den restaurang där Jämtland Basket äter den aktuella vardagen.
+En mobilanpassad lunchapp för Jämtland Basket. Appen visar automatiskt dagens restaurang och hämtar aktuella lunchrätter från restaurangernas webbplatser.
+
+**Liveversion:** [lunch-jb.onrender.com](https://lunch-jb.onrender.com/)
 
 ## Syfte
 
-Appen ska göra det möjligt att snabbt se dagens restaurang och lunchrätter utan att behöva besöka restaurangernas olika webbplatser.
+Lunch JB samlar lagets lunchinformation på ett ställe. Användaren behöver inte leta på flera restaurangwebbplatser och kan få dagens restaurang och meny som en automatisk notis på sin telefon.
 
-Målet är att appen senare automatiskt ska hämta menyerna och skicka en notis varje vardagsmorgon.
+## Funktioner
+
+- Väljer dagens restaurang utifrån veckodagen
+- Hämtar aktuella menyer från fyra olika restaurangwebbplatser
+- Visar dagens rätter direkt på startsidan
+- Visar lagets restaurangschema för hela veckan
+- Länkar till restaurangernas originalmenyer
+- Fungerar som installerbar PWA på mobilens hemskärm
+- Skickar automatiska lunchnotiser på vardagsmorgnar
+- Sparar pushprenumerationer i Supabase
+- Förhindrar dubbla notiser under samma dag
+- Visar tydliga felmeddelanden om en meny inte kan hämtas
+- Har responsiv design för mobil och dator
 
 ## Veckoschema
 
@@ -18,34 +32,81 @@ Målet är att appen senare automatiskt ska hämta menyerna och skicka en notis 
 | Torsdag | Campusrestaurangen         |
 | Fredag  | Campusrestaurangen         |
 
-## Funktioner just nu
+## Så fungerar appen
 
-- Väljer dagens restaurang automatiskt utifrån veckodagen
-- Hämtar aktuella lunchmenyer från restaurangernas webbplatser
-- Visar dagens rätter direkt på startsidan
-- Visar hela veckans restaurangschema
-- Länkar till restaurangernas originalmenyer
-- Hanterar olika menyformat för de fyra restaurangerna
-- Visar ett begripligt felmeddelande om en meny inte kan tolkas
-- Anpassad layout för dator och mobil
+React-gränssnittet hämtar dagens meny från en Express-server. Servern läser och tolkar restaurangernas webbsidor med Cheerio.
 
-## Planerade funktioner
-
-- Automatisk hämtning av aktuella lunchmenyer
-- Hantering av olika menyformat
-- PWA-stöd och installation på mobilens hemskärm
-- Pushnotis varje vardagsmorgon
-- Valbar tid för notiser
-- Vy för hela veckans menyer
+Pushprenumerationer och genomförda utskick sparas i Supabase. Ett schemalagt GitHub Actions-jobb kontaktar servern varje vardagsmorgon. Servern hämtar dagens meny och skickar den som en webbpushnotis till användarna.
 
 ## Teknik
+
+### Frontend
 
 - React
 - Vite
 - JavaScript
 - CSS
+- Progressive Web App
+- Service Worker
+
+### Backend och data
+
+- Node.js
+- Express
+- Cheerio
+- Supabase
+- Web Push och VAPID
+
+### Drift och automation
+
+- Render
+- GitHub Actions
 - Git och GitHub
+
+## Köra projektet lokalt
+
+Installera projektets paket:
+
+```powershell
+npm install
+```
+
+Starta frontend och backend tillsammans:
+
+```powershell
+npm run start
+```
+
+Frontend körs normalt på `http://localhost:5173` och backend på `http://localhost:3001`.
+
+Projektet kräver en lokal `.env.local` med serverinställningar för Supabase, VAPID och skyddade notisanrop. Hemliga värden ska aldrig sparas i Git.
+
+## Kvalitetskontroller
+
+Kontrollera koden:
+
+```powershell
+npm run lint
+```
+
+Skapa ett produktionsbygge:
+
+```powershell
+npm run build
+```
 
 ## Projektstatus
 
-Projektet är under aktiv utveckling. Frontend och backend är sammankopplade och appen kan hämta och visa aktuella lunchmenyer. Nästa större steg är PWA-stöd, publicering och pushnotiser.
+Den första fungerande versionen är publicerad. Appen kan installeras på en iPhone, hämta aktuella menyer och skicka automatiska lunchnotiser.
+
+Möjliga framtida förbättringar:
+
+- Knapp för att stänga av lunchnotiser
+- Valbar tid för notiser
+- Tydligare status för aktiverade notiser
+- Bättre övervakning när restauranger ändrar sina webbplatser
+- Vy med fler av veckans menyer
+
+## Säkerhet
+
+Hemliga Supabase-, VAPID- och utskicksnycklar hanteras med lokala miljövariabler, Render Environment Variables och GitHub Actions Secrets. De ska inte finnas i projektets versionshistorik.
