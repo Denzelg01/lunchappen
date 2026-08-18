@@ -296,19 +296,35 @@ function App() {
             <h2 id="install-title">Lägg till Lunch JB</h2>
 
             <ol>
-              <li>Öppna sidan i Safari.</li>
+              <li>
+                Om du inte ser Dela-knappen: tryck först på menyn med tre
+                punkter
+                <svg
+                  className="menu-icon"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle cx="5" cy="12" r="1.8" />
+                  <circle cx="12" cy="12" r="1.8" />
+                  <circle cx="19" cy="12" r="1.8" />
+                </svg>
+                i hörnet.
+              </li>
+
               <li>
                 Tryck på Dela-knappen
                 <svg
                   className="share-icon"
                   viewBox="0 0 24 24"
-                  aria-label="Dela"
+                  aria-hidden="true"
                 >
                   <path d="M12 15V3" />
                   <path d="m7.5 7.5 4.5-4.5 4.5 4.5" />
                   <path d="M7 10H5.5A2.5 2.5 0 0 0 3 12.5v6A2.5 2.5 0 0 0 5.5 21h13a2.5 2.5 0 0 0 2.5-2.5v-6a2.5 2.5 0 0 0-2.5-2.5H17" />
                 </svg>
               </li>
+
+              <li>Tryck på Visa mer om alternativet inte syns.</li>
               <li>Välj Lägg till på hemskärmen.</li>
               <li>Tryck på Lägg till.</li>
             </ol>

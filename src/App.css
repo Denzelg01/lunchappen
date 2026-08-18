@@ -408,3 +408,13 @@ a {
   font-size: 0.92rem;
   line-height: 1.5;
 }
+
+.menu-icon {
+  display: inline-block;
+  width: 23px;
+  height: 23px;
+  margin: 0 4px 0 7px;
+  color: #273d2e;
+  vertical-align: -6px;
+  fill: currentcolor;
+}
