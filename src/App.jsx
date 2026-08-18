@@ -172,6 +172,13 @@ function App() {
         </p>
 
         {!isInstalled && (
+          <p className="install-prompt">
+            🔔 Lägg till appen på hemskärmen för att kunna få automatiska
+            lunchnotiser.
+          </p>
+        )}
+
+        {!isInstalled && (
           <button
             className="install-button"
             type="button"
@@ -183,7 +190,7 @@ function App() {
               alt=""
               aria-hidden="true"
             />
-            Gör till app på hemskärmen
+            Lägg till som app på hemskärmen
           </button>
         )}
 
@@ -294,6 +301,11 @@ function App() {
             </button>
 
             <h2 id="install-title">Lägg till Lunch JB</h2>
+
+            <p className="install-dialog-intro">
+              Detta behövs för att du ska kunna aktivera lunchnotiser. När appen
+              är tillagd öppnar du den från hemskärmen och aktiverar notiserna.
+            </p>
 
             <ol>
               <li>

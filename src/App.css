@@ -418,3 +418,22 @@ a {
   vertical-align: -6px;
   fill: currentcolor;
 }
+
+.install-prompt {
+  max-width: 480px;
+  margin: 22px auto 0;
+  padding: 12px 16px;
+  color: #173921;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.5;
+  background: #fff4dc;
+  border: 1px solid #efc66d;
+  border-radius: 14px;
+}
+
+.install-dialog-intro {
+  margin: 0 0 22px;
+  color: #4f6656;
+  line-height: 1.55;
+}
